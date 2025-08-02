@@ -10,7 +10,7 @@ export const msalConfig: Configuration = {
       import.meta.env.VITE_REDIRECT_URI || window.location.origin, // Must be registered as a logout URI with your application
   },
   cache: {
-    cacheLocation: "sessionStorage", // Configures cache location. "sessionStorage" is more secure, but "localStorage" gives you SSO between tabs.
+    cacheLocation: "localStorage", // Use localStorage for better persistence across tabs and refreshes
     storeAuthStateInCookie: false, // Set this to "true" if you're having issues on IE11 or Edge
   },
 };

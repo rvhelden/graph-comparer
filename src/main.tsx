@@ -11,7 +11,7 @@ import { RouterProvider, createRouter } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
 
 // AntD
-import { ConfigProvider } from "antd";
+import { ConfigProvider, theme } from "antd";
 import "@ant-design/v5-patch-for-react-19";
 
 import "./index.css";
@@ -33,13 +33,14 @@ createRoot(document.getElementById("root")!).render(
     <MsalProvider instance={msalInstance}>
       <ConfigProvider
         theme={{
+          algorithm: theme.darkAlgorithm,
           token: {
-            // Seed Token
-            colorPrimary: "#00b96b",
+            colorPrimary: "rgb(50, 108, 57)",
+            colorBgBase: "rgb(27, 26, 25)",
+            colorBgContainer: "rgb(37, 36, 35)",
+            colorText: "rgb(243, 242, 243)",
+            colorTextSecondary: "hsl(127, 37%, 50%)",
             borderRadius: 2,
-
-            // Alias Token
-            colorBgContainer: "#f6ffed",
           },
         }}
       >

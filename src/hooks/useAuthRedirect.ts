@@ -1,21 +1,37 @@
-import { useEffect } from "react";
-import { useIsAuthenticated } from "@azure/msal-react";
-import { useNavigate, useRouterState } from "@tanstack/react-router";
+import { useEffect, useRef } from "react";
+import { useIsAuthenticated, useMsal } from "@azure/msal-react";
+import { loginRequest } from "../authConfig";
 
 export const useAuthRedirect = () => {
   const isAuthenticated = useIsAuthenticated();
-  const navigate = useNavigate();
-  const router = useRouterState();
-  const currentPath = router.location.pathname;
+  const { instance, inProgress } = useMsal();
+  const loginAttempted = useRef(false);
 
   useEffect(() => {
-    // If user is authenticated and on login page, redirect to home
-    if (isAuthenticated && currentPath === "/login") {
-      navigate({ to: "/" });
+    // Wait for MSAL to finish initializing and any ongoing operations
+    if (inProgress === "none" && !isAuthenticated && !loginAttempted.current) {
+      // Check if there are any accounts in cache first
+      const accounts = instance.getAllAccounts();
+      
+      if (accounts.length > 0) {
+        // There's a cached account, MSAL should handle this automatically
+        console.log("Found cached account, waiting for automatic authentication");
+        return;
+      }
+      
+      // No cached accounts, attempt login
+      loginAttempted.current = true;
+      
+      instance
+        .loginPopup(loginRequest)
+        .then(() => {
+          console.log("Authentication successful");
+        })
+        .catch((e) => {
+          console.error("Login failed:", e);
+          // Reset the flag if login fails so user can try again
+          loginAttempted.current = false;
+        });
     }
-    // If user is not authenticated and not on login page, redirect to login
-    else if (!isAuthenticated && currentPath !== "/login") {
-      navigate({ to: "/login" });
-    }
-  }, [isAuthenticated, currentPath, navigate]);
+  }, [isAuthenticated, instance, inProgress]);
 };
