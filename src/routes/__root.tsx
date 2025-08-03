@@ -6,6 +6,7 @@ import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { useIsAuthenticated, useMsal } from "@azure/msal-react";
 import { useAuthRedirect } from "../hooks/useAuthRedirect";
 import { LoadingSpinner } from "../components/LoadingSpinner";
+import { AppLayout } from "../components/AppLayout";
 
 export const Route = createRootRoute({
   component: RootComponent,
@@ -26,9 +27,9 @@ function RootComponent() {
   // Only show the app content if user is authenticated
   return (
     <>
-      <div>
+      <AppLayout>
         <Outlet />
-      </div>
+      </AppLayout>
       <TanStackRouterDevtools />
     </>
   );

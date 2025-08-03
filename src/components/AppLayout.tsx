@@ -11,16 +11,14 @@ interface AppLayoutProps {
 export const AppLayout = ({ children }: AppLayoutProps) => {
   return (
     <Layout style={{ minHeight: "100vh" }}>
-      <Sider width={280} style={{ backgroundColor: "rgb(37, 36, 35)" }}>
-        <SideNavigation />
-      </Sider>
+      <Header style={{ padding: 0 }}>
+        <TitleBar />
+      </Header>
       <Layout>
-        <Header style={{ padding: 0, backgroundColor: "rgb(37, 36, 35)" }}>
-          <TitleBar />
-        </Header>
-        <Content style={{ margin: "16px", backgroundColor: "rgb(27, 26, 25)" }}>
-          {children}
-        </Content>
+        <Sider width={280}>
+          <SideNavigation />
+        </Sider>
+        <Content style={{ margin: "16px" }}>{children}</Content>
       </Layout>
     </Layout>
   );

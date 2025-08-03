@@ -25,6 +25,10 @@ declare module "@tanstack/react-router" {
   }
 }
 
+const primary = "#326c39";
+const backgroundColor = "#141414";
+const secondaryBackgroundColor = "#1d1c1c";
+
 // Create MSAL instance
 const msalInstance = new PublicClientApplication(msalConfig);
 
@@ -33,14 +37,23 @@ createRoot(document.getElementById("root")!).render(
     <MsalProvider instance={msalInstance}>
       <ConfigProvider
         theme={{
+          hashed: false,
           algorithm: theme.darkAlgorithm,
           token: {
-            colorPrimary: "rgb(50, 108, 57)",
-            colorBgBase: "rgb(27, 26, 25)",
-            colorBgContainer: "rgb(37, 36, 35)",
-            colorText: "rgb(243, 242, 243)",
-            colorTextSecondary: "hsl(127, 37%, 50%)",
-            borderRadius: 2,
+            colorPrimary: primary,
+            colorBgBase: backgroundColor,
+          },
+          components: {
+            Layout: {
+              headerBg: secondaryBackgroundColor,
+              siderBg: secondaryBackgroundColor,
+            },
+            Menu: {
+              darkItemSelectedBg: "rgba(50, 108, 57, 0.4)",
+              darkSubMenuItemBg: secondaryBackgroundColor,
+              darkItemBg: secondaryBackgroundColor,
+              itemHoverBg: secondaryBackgroundColor,
+            },
           },
         }}
       >
