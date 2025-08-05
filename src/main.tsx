@@ -31,8 +31,8 @@ declare module '@tanstack/react-router' {
 
 const primary = '#326c39';
 const fontColor = '#50AF5BFF';
-const backgroundColor = '#141414';
-const secondaryBackgroundColor = '#1d1c1c';
+const backgroundColor = '#1B1A19FF';
+const secondaryBackgroundColor = '#252423FF';
 
 // Create MSAL instance
 const msalInstance = new PublicClientApplication(msalConfig);

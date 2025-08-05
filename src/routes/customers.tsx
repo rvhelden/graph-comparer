@@ -167,7 +167,6 @@ function CustomerTable({ environment }: { environment: string }) {
                     pageSizeOptions: ['10', '20', '50', '100']
                 }}
                 scroll={{ x: 1000 }}
-                size='small'
             >
                 <Column title='Customer Name' dataIndex='Name' key='Name' width={200} sorter defaultSortOrder='ascend' />
                 <Column title='Ring' dataIndex='RingName' key='RingName' width={120} sorter render={(value: string) => value || '—'} />
