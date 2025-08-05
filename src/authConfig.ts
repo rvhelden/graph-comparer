@@ -17,10 +17,24 @@ export const msalConfig: Configuration = {
 
 // Add scopes here for ID token to be used at Microsoft identity platform endpoints.
 export const loginRequest: PopupRequest = {
-  scopes: ["User.Read"],
+  scopes: [
+    "User.Read",
+    "api://1db0c7a7-38e1-48ef-98c8-95be5adab33b/user_impersonation",
+  ],
+};
+
+// API request for customers endpoint
+export const customersApiRequest: PopupRequest = {
+  scopes: ["api://1db0c7a7-38e1-48ef-98c8-95be5adab33b/user_impersonation"],
 };
 
 // Add the endpoints here for Microsoft Graph API services you'd like to use.
 export const graphConfig = {
   graphMeEndpoint: "https://graph.microsoft.com/v1.0/me",
+};
+
+// OData API configuration
+export const odataConfig = {
+  baseUrl: import.meta.env.VITE_ODATA_BASE_URL || "https://localhost:7253",
+  customersEndpoint: "/odata/customers",
 };

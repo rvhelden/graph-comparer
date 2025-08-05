@@ -12,18 +12,20 @@ export const useAuthRedirect = () => {
     if (inProgress === "none" && !isAuthenticated && !loginAttempted.current) {
       // Check if there are any accounts in cache first
       const accounts = instance.getAllAccounts();
-      
+
       if (accounts.length > 0) {
         // There's a cached account, MSAL should handle this automatically
-        console.log("Found cached account, waiting for automatic authentication");
+        console.log(
+          "Found cached account, waiting for automatic authentication"
+        );
         return;
       }
-      
+
       // No cached accounts, attempt login
       loginAttempted.current = true;
-      
+
       instance
-        .loginPopup(loginRequest)
+        .loginRedirect(loginRequest)
         .then(() => {
           console.log("Authentication successful");
         })

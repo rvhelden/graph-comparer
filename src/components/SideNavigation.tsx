@@ -33,7 +33,7 @@ export const SideNavigation = () => {
             key: "customers",
             icon: <ShopOutlined />,
             label: (
-              <Link to="/" className="menu-text">
+              <Link to="/customers" className="menu-text">
                 Customers
               </Link>
             ),

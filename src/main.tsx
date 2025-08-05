@@ -10,6 +10,10 @@ import { msalConfig } from "./authConfig";
 import { RouterProvider, createRouter } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
 
+// TanStack Query
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+
 // AntD
 import { ConfigProvider, theme } from "antd";
 import "@ant-design/v5-patch-for-react-19";
@@ -32,33 +36,48 @@ const secondaryBackgroundColor = "#1d1c1c";
 // Create MSAL instance
 const msalInstance = new PublicClientApplication(msalConfig);
 
+// Create Query Client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
+      retry: 3,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <MsalProvider instance={msalInstance}>
-      <ConfigProvider
-        theme={{
-          hashed: false,
-          algorithm: theme.darkAlgorithm,
-          token: {
-            colorPrimary: primary,
-            colorBgBase: backgroundColor,
-          },
-          components: {
-            Layout: {
-              headerBg: secondaryBackgroundColor,
-              siderBg: secondaryBackgroundColor,
+      <QueryClientProvider client={queryClient}>
+        <ConfigProvider
+          theme={{
+            hashed: false,
+            algorithm: theme.darkAlgorithm,
+            token: {
+              colorPrimary: primary,
+              colorBgBase: backgroundColor,
             },
-            Menu: {
-              darkItemSelectedBg: "rgba(50, 108, 57, 0.4)",
-              darkSubMenuItemBg: secondaryBackgroundColor,
-              darkItemBg: secondaryBackgroundColor,
-              itemHoverBg: secondaryBackgroundColor,
+            components: {
+              Layout: {
+                headerBg: secondaryBackgroundColor,
+                siderBg: secondaryBackgroundColor,
+              },
+              Menu: {
+                darkItemSelectedBg: "rgba(50, 108, 57, 0.4)",
+                darkSubMenuItemBg: secondaryBackgroundColor,
+                darkItemBg: secondaryBackgroundColor,
+                itemHoverBg: secondaryBackgroundColor,
+              },
             },
-          },
-        }}
-      >
-        <RouterProvider router={router} />
-      </ConfigProvider>
+          }}
+        >
+          <RouterProvider router={router} />
+          <ReactQueryDevtools initialIsOpen={false} />
+        </ConfigProvider>
+      </QueryClientProvider>
     </MsalProvider>
   </StrictMode>
 );
