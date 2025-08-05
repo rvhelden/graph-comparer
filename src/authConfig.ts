@@ -37,4 +37,6 @@ export const graphConfig = {
 export const odataConfig = {
   baseUrl: import.meta.env.VITE_ODATA_BASE_URL || "https://localhost:7253",
   customersEndpoint: "/odata/customers",
+  deploymentEnvironmentsEndpoint: "/odata/deploymentenvironments",
+  ringsEndpoint: "/odata/rings",
 };

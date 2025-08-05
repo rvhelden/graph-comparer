@@ -13,6 +13,11 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+@font-face {
+    font-family: Doctor Glitch;
+    src: url("font/Doctor Glitch.otf") format("opentype");
+}
+
 body {
   margin: 0;
   display: flex;
