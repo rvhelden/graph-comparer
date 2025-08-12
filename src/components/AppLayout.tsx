@@ -3,6 +3,7 @@ import { useState } from "react";
 import { TitleBar } from "./TitleBar";
 import { PermissionsList } from "./PermissionsList";
 import { PermissionDetails } from "./PermissionDetails";
+import { PermissionComparison } from "./PermissionComparison";
 import { usePermissions } from "../hooks/usePermissions";
 
 const { Header, Sider, Content } = Layout;
@@ -10,10 +11,41 @@ const { Header, Sider, Content } = Layout;
 export const AppLayout = () => {
   const { permissions, descriptions, isLoading, error } = usePermissions();
   const [selectedPermission, setSelectedPermission] = useState<string | null>(null);
+  const [comparisonMode, setComparisonMode] = useState(false);
+  const [selectedForComparison, setSelectedForComparison] = useState<string[]>([]);
 
   const selectedPermissionData = selectedPermission 
     ? permissions.find(p => p.name === selectedPermission) || null
     : null;
+
+  const selectedPermissionsData = selectedForComparison
+    .map(name => permissions.find(p => p.name === name))
+    .filter(Boolean) as typeof permissions;
+
+  const handleComparisonToggle = (permissionName: string) => {
+    setSelectedForComparison(prev => 
+      prev.includes(permissionName)
+        ? prev.filter(name => name !== permissionName)
+        : [...prev, permissionName]
+    );
+  };
+
+  const handleComparisonModeToggle = () => {
+    setComparisonMode(!comparisonMode);
+    if (!comparisonMode) {
+      setSelectedPermission(null); // Clear single selection when entering comparison mode
+    } else {
+      setSelectedForComparison([]); // Clear comparison selection when leaving comparison mode
+    }
+  };
+
+  const handleClearComparison = () => {
+    setSelectedForComparison([]);
+  };
+
+  const handleRemoveFromComparison = (permissionName: string) => {
+    setSelectedForComparison(prev => prev.filter(name => name !== permissionName));
+  };
 
   if (error) {
     return (
@@ -51,6 +83,11 @@ export const AppLayout = () => {
             selectedPermission={selectedPermission}
             onPermissionSelect={setSelectedPermission}
             isLoading={isLoading}
+            comparisonMode={comparisonMode}
+            selectedForComparison={selectedForComparison}
+            onComparisonToggle={handleComparisonToggle}
+            onComparisonModeToggle={handleComparisonModeToggle}
+            onClearComparison={handleClearComparison}
           />
         </Sider>
         
@@ -64,6 +101,12 @@ export const AppLayout = () => {
             }}>
               <Spin size="large" />
             </div>
+          ) : comparisonMode ? (
+            <PermissionComparison
+              selectedPermissions={selectedPermissionsData}
+              descriptions={descriptions}
+              onRemovePermission={handleRemoveFromComparison}
+            />
           ) : (
             <PermissionDetails 
               permission={selectedPermissionData}
