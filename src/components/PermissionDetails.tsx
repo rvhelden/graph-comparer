@@ -1,5 +1,5 @@
-import { Card, Typography, Descriptions, Tag, Table, Collapse, Empty, Tabs, Select } from 'antd';
-import { ApiOutlined, LockOutlined, UserOutlined, AppstoreOutlined } from '@ant-design/icons';
+import { Card, Typography, Descriptions, Tag, Table, Collapse, Empty, Tabs, Select, Switch, Button } from 'antd';
+import { ApiOutlined, LockOutlined, UserOutlined, AppstoreOutlined, LinkOutlined } from '@ant-design/icons';
 import { useState } from 'react';
 import type { Permission, PermissionDescription } from '../hooks/usePermissions';
 
@@ -18,6 +18,8 @@ interface PermissionDetailsProps {
     permission: Permission | null;
     descriptions: PermissionDescription[];
     onUrlFilter?: (urlPrefix: string) => void;
+    apiVersion?: 'v1.0' | 'beta';
+    onApiVersionChange?: (version: 'v1.0' | 'beta') => void;
 }
 
 // Component for individual endpoint tab with method filtering
@@ -59,7 +61,7 @@ const EndpointTable = ({
     );
 };
 
-export const PermissionDetails = ({ permission, descriptions, onUrlFilter }: PermissionDetailsProps) => {
+export const PermissionDetails = ({ permission, descriptions, onUrlFilter, apiVersion = 'v1.0', onApiVersionChange }: PermissionDetailsProps) => {
     if (!permission) {
         return (
             <div
@@ -182,7 +184,7 @@ export const PermissionDetails = ({ permission, descriptions, onUrlFilter }: Per
             title: 'Endpoint',
             dataIndex: 'path',
             key: 'path',
-            render: (path: string) => {
+            render: (path: string, record: ApiEndpoint) => {
                 const handleUrlClick = () => {
                     const segments = path.split('/').filter((segment) => segment);
                     if (segments.length > 0 && onUrlFilter) {
@@ -190,18 +192,99 @@ export const PermissionDetails = ({ permission, descriptions, onUrlFilter }: Per
                     }
                 };
 
+                const getEndpointDocUrl = (path: string, method: string, version: string) => {
+                    const cleanPath = path.replace(/\{[^}]+\}/g, '').replace(/\/+$/, '');
+                    const segments = cleanPath.split('/').filter(s => s);
+                    
+                    if (segments.length === 0) return null;
+                    
+                    const resource = segments[0];
+                    
+                    // Handle different endpoint patterns
+                    if (segments.length === 1) {
+                        // Root resource endpoints like /users, /groups, etc.
+                        if (method === 'GET') {
+                            return `https://learn.microsoft.com/en-us/graph/api/${resource}-list?view=graph-rest-${version}`;
+                        } else if (method === 'POST') {
+                            // Convert plural to singular for POST operations
+                            const singular = resource.endsWith('s') ? resource.slice(0, -1) : resource;
+                            return `https://learn.microsoft.com/en-us/graph/api/${singular}-post-${resource}?view=graph-rest-${version}`;
+                        }
+                    } else if (segments.length === 2) {
+                        // Two-segment paths like /users/{id}, /users/delta, /groups/{id}/members
+                        const action = segments[1];
+                        
+                        if (method === 'GET') {
+                            // Convert plural to singular for the resource name in URL
+                            const singular = resource.endsWith('s') ? resource.slice(0, -1) : resource;
+                            
+                            // Special cases for common actions
+                            if (action === 'delta') {
+                                return `https://learn.microsoft.com/en-us/graph/api/${singular}-delta?view=graph-rest-${version}`;
+                            } else if (action === 'count') {
+                                return `https://learn.microsoft.com/en-us/graph/api/${resource}-list?view=graph-rest-${version}`;
+                            } else {
+                                // Default GET pattern
+                                return `https://learn.microsoft.com/en-us/graph/api/${singular}-get?view=graph-rest-${version}`;
+                            }
+                        } else if (method === 'POST') {
+                            const singular = resource.endsWith('s') ? resource.slice(0, -1) : resource;
+                            return `https://learn.microsoft.com/en-us/graph/api/${singular}-post-${action}?view=graph-rest-${version}`;
+                        } else if (method === 'PATCH' || method === 'PUT') {
+                            const singular = resource.endsWith('s') ? resource.slice(0, -1) : resource;
+                            return `https://learn.microsoft.com/en-us/graph/api/${singular}-update?view=graph-rest-${version}`;
+                        } else if (method === 'DELETE') {
+                            const singular = resource.endsWith('s') ? resource.slice(0, -1) : resource;
+                            return `https://learn.microsoft.com/en-us/graph/api/${singular}-delete?view=graph-rest-${version}`;
+                        }
+                    } else if (segments.length >= 3) {
+                        // Three or more segments like /users/{id}/messages, /groups/{id}/members
+                        const subResource = segments[2];
+                        const singular = resource.endsWith('s') ? resource.slice(0, -1) : resource;
+                        
+                        if (method === 'GET') {
+                            return `https://learn.microsoft.com/en-us/graph/api/${singular}-list-${subResource}?view=graph-rest-${version}`;
+                        } else if (method === 'POST') {
+                            return `https://learn.microsoft.com/en-us/graph/api/${singular}-post-${subResource}?view=graph-rest-${version}`;
+                        }
+                    }
+                    
+                    return null;
+                };
+
+                const docUrl = getEndpointDocUrl(path, record.method, apiVersion);
+                const fullPath = `/${apiVersion}${path}`;
+
                 return (
-                    <Text
-                        code
-                        style={{
-                            cursor: onUrlFilter ? 'pointer' : 'default',
-                            color: onUrlFilter ? '#50AF5BFF' : undefined
-                        }}
-                        onClick={onUrlFilter ? handleUrlClick : undefined}
-                        title={onUrlFilter ? 'Click to filter permissions by this URL prefix' : undefined}
-                    >
-                        {path}
-                    </Text>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <Text
+                            code
+                            style={{
+                                cursor: onUrlFilter ? 'pointer' : 'default',
+                                color: onUrlFilter ? '#50AF5BFF' : undefined,
+                                fontSize: '11px'
+                            }}
+                            onClick={onUrlFilter ? handleUrlClick : undefined}
+                            title={onUrlFilter ? 'Click to filter permissions by this URL prefix' : undefined}
+                        >
+                            {fullPath}
+                        </Text>
+                        {docUrl && (
+                            <Button
+                                type="text"
+                                size="small"
+                                icon={<LinkOutlined />}
+                                onClick={() => window.open(docUrl, '_blank')}
+                                title="View API documentation"
+                                style={{ 
+                                    padding: '0 4px',
+                                    minWidth: 'auto',
+                                    height: 'auto',
+                                    color: '#50AF5BFF'
+                                }}
+                            />
+                        )}
+                    </div>
                 );
             }
         },
@@ -239,10 +322,36 @@ export const PermissionDetails = ({ permission, descriptions, onUrlFilter }: Per
                 backgroundColor: '#1B1A19FF'
             }}
         >
-            <Title level={2} style={{ color: '#50AF5BFF', marginBottom: '24px' }}>
-                <ApiOutlined style={{ marginRight: '8px' }} />
-                {permission.name}
-            </Title>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                <Title level={2} style={{ color: '#50AF5BFF', margin: 0 }}>
+                    <ApiOutlined style={{ marginRight: '8px' }} />
+                    {permission.name}
+                </Title>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <Text style={{ color: '#50AF5BFF' }}>v1.0</Text>
+                        <Switch
+                            checked={apiVersion === 'beta'}
+                            onChange={(checked) => onApiVersionChange?.(checked ? 'beta' : 'v1.0')}
+                            style={{
+                                backgroundColor: apiVersion === 'beta' ? '#326c39' : undefined
+                            }}
+                        />
+                        <Text style={{ color: '#50AF5BFF' }}>beta</Text>
+                    </div>
+                    <Button
+                        type="primary"
+                        icon={<LinkOutlined />}
+                        onClick={() => {
+                            const docUrl = `https://learn.microsoft.com/en-us/graph/permissions-reference#${permission.name.toLowerCase().replace(/\./g, '')}`;
+                            window.open(docUrl, '_blank');
+                        }}
+                        style={{ backgroundColor: '#326c39', borderColor: '#326c39' }}
+                    >
+                        View Docs
+                    </Button>
+                </div>
+            </div>
 
             {/* Main Description Card */}
             {matchingDescription && (

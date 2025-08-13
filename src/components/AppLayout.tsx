@@ -14,6 +14,7 @@ export const AppLayout = () => {
   const [comparisonMode, setComparisonMode] = useState(false);
   const [selectedForComparison, setSelectedForComparison] = useState<string[]>([]);
   const [urlFilter, setUrlFilter] = useState<string | undefined>(undefined);
+  const [apiVersion, setApiVersion] = useState<'v1.0' | 'beta'>('v1.0');
 
   const selectedPermissionData = selectedPermission 
     ? permissions.find(p => p.name === selectedPermission) || null
@@ -117,6 +118,8 @@ export const AppLayout = () => {
               permission={selectedPermissionData}
               descriptions={descriptions}
               onUrlFilter={setUrlFilter}
+              apiVersion={apiVersion}
+              onApiVersionChange={setApiVersion}
             />
           )}
         </Content>
