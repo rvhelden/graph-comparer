@@ -15,6 +15,7 @@ export const AppLayout = () => {
   const [selectedForComparison, setSelectedForComparison] = useState<string[]>([]);
   const [urlFilter, setUrlFilter] = useState<string | undefined>(undefined);
   const [apiVersion, setApiVersion] = useState<'v1.0' | 'beta'>('v1.0');
+  const [hideDisabled, setHideDisabled] = useState(true);
 
   const selectedPermissionData = selectedPermission 
     ? permissions.find(p => p.name === selectedPermission) || null
@@ -70,7 +71,12 @@ export const AppLayout = () => {
   return (
     <Layout style={{ minHeight: "100vh" }}>
       <Header style={{ padding: 0 }}>
-        <TitleBar />
+        <TitleBar 
+          apiVersion={apiVersion}
+          onApiVersionChange={setApiVersion}
+          hideDisabled={hideDisabled}
+          onHideDisabledChange={setHideDisabled}
+        />
       </Header>
       <Layout style={{ backgroundColor: '#1B1A19FF' }}>
         <Sider 
@@ -84,6 +90,7 @@ export const AppLayout = () => {
         >
           <PermissionsList
             permissions={permissions}
+            descriptions={descriptions}
             selectedPermission={selectedPermission}
             onPermissionSelect={setSelectedPermission}
             isLoading={isLoading}
@@ -94,6 +101,7 @@ export const AppLayout = () => {
             onClearComparison={handleClearComparison}
             urlFilter={urlFilter}
             onUrlFilterChange={setUrlFilter}
+            hideDisabled={hideDisabled}
           />
         </Sider>
         
@@ -119,7 +127,6 @@ export const AppLayout = () => {
               descriptions={descriptions}
               onUrlFilter={setUrlFilter}
               apiVersion={apiVersion}
-              onApiVersionChange={setApiVersion}
             />
           )}
         </Content>

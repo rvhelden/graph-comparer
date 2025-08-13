@@ -1,10 +1,46 @@
-import { Card, Typography, Descriptions, Tag, Table, Collapse, Empty, Tabs, Select, Switch, Button } from 'antd';
-import { ApiOutlined, LockOutlined, UserOutlined, AppstoreOutlined, LinkOutlined } from '@ant-design/icons';
+import { Card, Typography, Descriptions, Tag, Table, Collapse, Empty, Tabs, Select, Button, Alert } from 'antd';
+import {
+    ApiOutlined,
+    LockOutlined,
+    UserOutlined,
+    AppstoreOutlined,
+    LinkOutlined,
+    TeamOutlined,
+    MessageOutlined,
+    UsergroupAddOutlined
+} from '@ant-design/icons';
 import { useState } from 'react';
 import type { Permission, PermissionDescription } from '../hooks/usePermissions';
 
 const { Title, Text, Paragraph } = Typography;
 const { Panel } = Collapse;
+
+// Function to get RSC scope information
+const getRscScopeInfo = (permissionName: string) => {
+    if (permissionName.endsWith('.Chat')) {
+        return {
+            scope: 'Chat',
+            icon: <MessageOutlined />,
+            description: 'Resource-specific consent for individual chats and meetings',
+            color: '#1890ff'
+        };
+    } else if (permissionName.endsWith('.Group')) {
+        return {
+            scope: 'Team/Group',
+            icon: <UsergroupAddOutlined />,
+            description: 'Resource-specific consent for individual teams and groups',
+            color: '#285f0d'
+        };
+    } else if (permissionName.endsWith('.User')) {
+        return {
+            scope: 'User',
+            icon: <UserOutlined />,
+            description: 'Resource-specific consent for individual users',
+            color: '#fa8c16'
+        };
+    }
+    return null;
+};
 
 interface ApiEndpoint {
     key: string;
@@ -19,7 +55,6 @@ interface PermissionDetailsProps {
     descriptions: PermissionDescription[];
     onUrlFilter?: (urlPrefix: string) => void;
     apiVersion?: 'v1.0' | 'beta';
-    onApiVersionChange?: (version: 'v1.0' | 'beta') => void;
 }
 
 // Component for individual endpoint tab with method filtering
@@ -61,7 +96,7 @@ const EndpointTable = ({
     );
 };
 
-export const PermissionDetails = ({ permission, descriptions, onUrlFilter, apiVersion = 'v1.0', onApiVersionChange }: PermissionDetailsProps) => {
+export const PermissionDetails = ({ permission, descriptions, onUrlFilter, apiVersion = 'v1.0' }: PermissionDetailsProps) => {
     if (!permission) {
         return (
             <div
@@ -184,7 +219,7 @@ export const PermissionDetails = ({ permission, descriptions, onUrlFilter, apiVe
             title: 'Endpoint',
             dataIndex: 'path',
             key: 'path',
-            render: (path: string, record: ApiEndpoint) => {
+            render: (path: string) => {
                 const handleUrlClick = () => {
                     const segments = path.split('/').filter((segment) => segment);
                     if (segments.length > 0 && onUrlFilter) {
@@ -192,67 +227,6 @@ export const PermissionDetails = ({ permission, descriptions, onUrlFilter, apiVe
                     }
                 };
 
-                const getEndpointDocUrl = (path: string, method: string, version: string) => {
-                    const cleanPath = path.replace(/\{[^}]+\}/g, '').replace(/\/+$/, '');
-                    const segments = cleanPath.split('/').filter(s => s);
-                    
-                    if (segments.length === 0) return null;
-                    
-                    const resource = segments[0];
-                    
-                    // Handle different endpoint patterns
-                    if (segments.length === 1) {
-                        // Root resource endpoints like /users, /groups, etc.
-                        if (method === 'GET') {
-                            return `https://learn.microsoft.com/en-us/graph/api/${resource}-list?view=graph-rest-${version}`;
-                        } else if (method === 'POST') {
-                            // Convert plural to singular for POST operations
-                            const singular = resource.endsWith('s') ? resource.slice(0, -1) : resource;
-                            return `https://learn.microsoft.com/en-us/graph/api/${singular}-post-${resource}?view=graph-rest-${version}`;
-                        }
-                    } else if (segments.length === 2) {
-                        // Two-segment paths like /users/{id}, /users/delta, /groups/{id}/members
-                        const action = segments[1];
-                        
-                        if (method === 'GET') {
-                            // Convert plural to singular for the resource name in URL
-                            const singular = resource.endsWith('s') ? resource.slice(0, -1) : resource;
-                            
-                            // Special cases for common actions
-                            if (action === 'delta') {
-                                return `https://learn.microsoft.com/en-us/graph/api/${singular}-delta?view=graph-rest-${version}`;
-                            } else if (action === 'count') {
-                                return `https://learn.microsoft.com/en-us/graph/api/${resource}-list?view=graph-rest-${version}`;
-                            } else {
-                                // Default GET pattern
-                                return `https://learn.microsoft.com/en-us/graph/api/${singular}-get?view=graph-rest-${version}`;
-                            }
-                        } else if (method === 'POST') {
-                            const singular = resource.endsWith('s') ? resource.slice(0, -1) : resource;
-                            return `https://learn.microsoft.com/en-us/graph/api/${singular}-post-${action}?view=graph-rest-${version}`;
-                        } else if (method === 'PATCH' || method === 'PUT') {
-                            const singular = resource.endsWith('s') ? resource.slice(0, -1) : resource;
-                            return `https://learn.microsoft.com/en-us/graph/api/${singular}-update?view=graph-rest-${version}`;
-                        } else if (method === 'DELETE') {
-                            const singular = resource.endsWith('s') ? resource.slice(0, -1) : resource;
-                            return `https://learn.microsoft.com/en-us/graph/api/${singular}-delete?view=graph-rest-${version}`;
-                        }
-                    } else if (segments.length >= 3) {
-                        // Three or more segments like /users/{id}/messages, /groups/{id}/members
-                        const subResource = segments[2];
-                        const singular = resource.endsWith('s') ? resource.slice(0, -1) : resource;
-                        
-                        if (method === 'GET') {
-                            return `https://learn.microsoft.com/en-us/graph/api/${singular}-list-${subResource}?view=graph-rest-${version}`;
-                        } else if (method === 'POST') {
-                            return `https://learn.microsoft.com/en-us/graph/api/${singular}-post-${subResource}?view=graph-rest-${version}`;
-                        }
-                    }
-                    
-                    return null;
-                };
-
-                const docUrl = getEndpointDocUrl(path, record.method, apiVersion);
                 const fullPath = `/${apiVersion}${path}`;
 
                 return (
@@ -260,30 +234,13 @@ export const PermissionDetails = ({ permission, descriptions, onUrlFilter, apiVe
                         <Text
                             code
                             style={{
-                                cursor: onUrlFilter ? 'pointer' : 'default',
-                                color: onUrlFilter ? '#50AF5BFF' : undefined,
-                                fontSize: '11px'
+                                cursor: onUrlFilter ? 'pointer' : 'default'
                             }}
                             onClick={onUrlFilter ? handleUrlClick : undefined}
                             title={onUrlFilter ? 'Click to filter permissions by this URL prefix' : undefined}
                         >
                             {fullPath}
                         </Text>
-                        {docUrl && (
-                            <Button
-                                type="text"
-                                size="small"
-                                icon={<LinkOutlined />}
-                                onClick={() => window.open(docUrl, '_blank')}
-                                title="View API documentation"
-                                style={{ 
-                                    padding: '0 4px',
-                                    minWidth: 'auto',
-                                    height: 'auto',
-                                    color: '#50AF5BFF'
-                                }}
-                            />
-                        )}
                     </div>
                 );
             }
@@ -328,22 +285,11 @@ export const PermissionDetails = ({ permission, descriptions, onUrlFilter, apiVe
                     {permission.name}
                 </Title>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <Text style={{ color: '#50AF5BFF' }}>v1.0</Text>
-                        <Switch
-                            checked={apiVersion === 'beta'}
-                            onChange={(checked) => onApiVersionChange?.(checked ? 'beta' : 'v1.0')}
-                            style={{
-                                backgroundColor: apiVersion === 'beta' ? '#326c39' : undefined
-                            }}
-                        />
-                        <Text style={{ color: '#50AF5BFF' }}>beta</Text>
-                    </div>
                     <Button
-                        type="primary"
+                        type='primary'
                         icon={<LinkOutlined />}
                         onClick={() => {
-                            const docUrl = `https://learn.microsoft.com/en-us/graph/permissions-reference#${permission.name.toLowerCase().replace(/\./g, '')}`;
+                            let docUrl = `https://learn.microsoft.com/en-us/graph/permissions-reference#${permission.name.toLowerCase().replace(/\./g, '')}`;
                             window.open(docUrl, '_blank');
                         }}
                         style={{ backgroundColor: '#326c39', borderColor: '#326c39' }}
@@ -352,6 +298,45 @@ export const PermissionDetails = ({ permission, descriptions, onUrlFilter, apiVe
                     </Button>
                 </div>
             </div>
+
+            {/* RSC Information Card */}
+            {permission.authorizationType === 'RSC' && (
+                <Alert
+                    message={
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <TeamOutlined style={{ color: '#1890ff' }} />
+                            <Text strong>Resource Specific Consent (RSC) Permission</Text>
+                            {(() => {
+                                const scopeInfo = getRscScopeInfo(permission.name);
+                                return scopeInfo ? (
+                                    <Tag icon={scopeInfo.icon} color={scopeInfo.color}>
+                                        {scopeInfo.scope}
+                                    </Tag>
+                                ) : null;
+                            })()}
+                        </div>
+                    }
+                    description={(() => {
+                        const scopeInfo = getRscScopeInfo(permission.name);
+                        return (
+                            <div>
+                                <Text>
+                                    {scopeInfo
+                                        ? scopeInfo.description
+                                        : 'This permission requires resource-specific consent and is typically used by Microsoft Teams applications.'}
+                                </Text>
+                                <br />
+                                <Text type='secondary'>
+                                    Apps with RSC permissions only access resources where they are explicitly installed or granted access.
+                                </Text>
+                            </div>
+                        );
+                    })()}
+                    type='info'
+                    showIcon
+                    style={{ marginBottom: '16px' }}
+                />
+            )}
 
             {/* Main Description Card */}
             {matchingDescription && (

@@ -12,7 +12,9 @@
       "Bash(curl:*)",
       "Bash(rm:*)",
       "Bash(git remote get-url:*)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(grep:*)",
+      "Bash(rg:*)"
     ],
     "deny": []
   }
