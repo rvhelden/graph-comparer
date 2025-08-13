@@ -17,36 +17,32 @@ interface ApiEndpoint {
 interface PermissionDetailsProps {
     permission: Permission | null;
     descriptions: PermissionDescription[];
+    onUrlFilter?: (urlPrefix: string) => void;
 }
 
 // Component for individual endpoint tab with method filtering
-const EndpointTable = ({ endpoints, apiColumns }: { 
-    endpoints: ApiEndpoint[], 
+const EndpointTable = ({
+    endpoints,
+    apiColumns
+}: {
+    endpoints: ApiEndpoint[];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    apiColumns: any[]
+    apiColumns: any[];
 }) => {
     const [methodFilter, setMethodFilter] = useState<string | undefined>(undefined);
-    
+
     // Get unique methods for this tab
-    const availableMethods = [...new Set(endpoints.map(e => e.method))].sort();
-    
+    const availableMethods = [...new Set(endpoints.map((e) => e.method))].sort();
+
     // Filter endpoints by selected method
-    const filteredEndpoints = methodFilter 
-        ? endpoints.filter(e => e.method === methodFilter)
-        : endpoints;
-    
+    const filteredEndpoints = methodFilter ? endpoints.filter((e) => e.method === methodFilter) : endpoints;
+
     return (
         <div>
             <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Text>Filter by method:</Text>
-                <Select
-                    placeholder="All methods"
-                    value={methodFilter}
-                    onChange={setMethodFilter}
-                    allowClear
-                    style={{ minWidth: 120 }}
-                >
-                    {availableMethods.map(method => (
+                <Select placeholder='All methods' value={methodFilter} onChange={setMethodFilter} allowClear style={{ minWidth: 120 }}>
+                    {availableMethods.map((method) => (
                         <Select.Option key={method} value={method}>
                             <Tag color={method === 'GET' ? 'blue' : method === 'POST' ? 'green' : 'orange'} style={{ margin: 0 }}>
                                 {method}
@@ -54,22 +50,16 @@ const EndpointTable = ({ endpoints, apiColumns }: {
                         </Select.Option>
                     ))}
                 </Select>
-                <Text type="secondary">
+                <Text type='secondary'>
                     {filteredEndpoints.length} of {endpoints.length} endpoints
                 </Text>
             </div>
-            <Table
-                columns={apiColumns}
-                dataSource={filteredEndpoints}
-                pagination={false}
-                scroll={{ x: true }}
-                size="small"
-            />
+            <Table columns={apiColumns} dataSource={filteredEndpoints} pagination={false} scroll={{ x: true }} size='small' />
         </div>
     );
 };
 
-export const PermissionDetails = ({ permission, descriptions }: PermissionDetailsProps) => {
+export const PermissionDetails = ({ permission, descriptions, onUrlFilter }: PermissionDetailsProps) => {
     if (!permission) {
         return (
             <div
@@ -139,10 +129,7 @@ export const PermissionDetails = ({ permission, descriptions }: PermissionDetail
             );
         }
         return (
-            <div 
-                style={{ display: 'flex', alignItems: 'center' }}
-                title={`Privilege Level ${level}/5`}
-            >
+            <div style={{ display: 'flex', alignItems: 'center' }} title={`Privilege Level ${level}/5`}>
                 {rectangles}
             </div>
         );
@@ -195,11 +182,28 @@ export const PermissionDetails = ({ permission, descriptions }: PermissionDetail
             title: 'Endpoint',
             dataIndex: 'path',
             key: 'path',
-            render: (path: string) => (
-                <Text code style={{ fontSize: '12px' }}>
-                    {path}
-                </Text>
-            )
+            render: (path: string) => {
+                const handleUrlClick = () => {
+                    const segments = path.split('/').filter((segment) => segment);
+                    if (segments.length > 0 && onUrlFilter) {
+                        onUrlFilter(segments[0]);
+                    }
+                };
+
+                return (
+                    <Text
+                        code
+                        style={{
+                            cursor: onUrlFilter ? 'pointer' : 'default',
+                            color: onUrlFilter ? '#50AF5BFF' : undefined
+                        }}
+                        onClick={onUrlFilter ? handleUrlClick : undefined}
+                        title={onUrlFilter ? 'Click to filter permissions by this URL prefix' : undefined}
+                    >
+                        {path}
+                    </Text>
+                );
+            }
         },
         {
             title: 'Schemes',

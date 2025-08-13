@@ -13,6 +13,7 @@ export const AppLayout = () => {
   const [selectedPermission, setSelectedPermission] = useState<string | null>(null);
   const [comparisonMode, setComparisonMode] = useState(false);
   const [selectedForComparison, setSelectedForComparison] = useState<string[]>([]);
+  const [urlFilter, setUrlFilter] = useState<string | undefined>(undefined);
 
   const selectedPermissionData = selectedPermission 
     ? permissions.find(p => p.name === selectedPermission) || null
@@ -75,7 +76,9 @@ export const AppLayout = () => {
           width={400} 
           style={{ 
             backgroundColor: '#252423FF',
-            borderRight: '1px solid #303030'
+            borderRight: '1px solid #303030',
+            height: 'calc(100vh - 64px)',
+            overflow: 'hidden'
           }}
         >
           <PermissionsList
@@ -88,6 +91,8 @@ export const AppLayout = () => {
             onComparisonToggle={handleComparisonToggle}
             onComparisonModeToggle={handleComparisonModeToggle}
             onClearComparison={handleClearComparison}
+            urlFilter={urlFilter}
+            onUrlFilterChange={setUrlFilter}
           />
         </Sider>
         
@@ -111,6 +116,7 @@ export const AppLayout = () => {
             <PermissionDetails 
               permission={selectedPermissionData}
               descriptions={descriptions}
+              onUrlFilter={setUrlFilter}
             />
           )}
         </Content>
