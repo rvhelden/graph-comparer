@@ -1,47 +1,13 @@
 import { useState, useMemo } from 'react';
-import { Input, List, Typography, Checkbox, Button, Badge, Collapse, Tag } from 'antd';
-import { SearchOutlined, SwapOutlined, ClearOutlined, FolderOutlined, StarOutlined, StarFilled, TeamOutlined } from '@ant-design/icons';
+import { List, Typography, Badge, Collapse } from 'antd';
+import { FolderOutlined } from '@ant-design/icons';
 import type { Permission } from '../hooks/usePermissions';
+import { COMMON_PERMISSIONS } from '../constants/permissions';
+import { PermissionItem } from './PermissionItem';
+import { PermissionsListHeader } from './PermissionsListHeader';
 
-const { Search } = Input;
 const { Text } = Typography;
 const { Panel } = Collapse;
-
-// Most commonly used Microsoft Graph permissions
-const COMMON_PERMISSIONS = [
-    'User.Read',
-    'User.ReadWrite',
-    'User.Read.All',
-    'User.ReadWrite.All',
-    'Directory.Read.All',
-    'Directory.ReadWrite.All',
-    'Group.Read.All',
-    'Group.ReadWrite.All',
-    'Mail.Read',
-    'Mail.ReadWrite',
-    'Mail.Send',
-    'Calendars.Read',
-    'Calendars.ReadWrite',
-    'Files.Read',
-    'Files.ReadWrite',
-    'Files.Read.All',
-    'Files.ReadWrite.All',
-    'Sites.Read.All',
-    'Sites.ReadWrite.All',
-    'People.Read',
-    'People.Read.All',
-    'Contacts.Read',
-    'Contacts.ReadWrite',
-    'Tasks.Read',
-    'Tasks.ReadWrite',
-    'Notes.Read',
-    'Notes.ReadWrite',
-    'Application.Read.All',
-    'Application.ReadWrite.All',
-    'AppRoleAssignment.ReadWrite.All',
-    'RoleManagement.Read.All',
-    'RoleManagement.ReadWrite.All'
-];
 
 interface PermissionsListProps {
     permissions: Permission[];
@@ -53,7 +19,6 @@ interface PermissionsListProps {
     selectedForComparison?: string[];
     onComparisonToggle?: (permissionName: string) => void;
     onComparisonModeToggle?: () => void;
-    onClearComparison?: () => void;
     urlFilter?: string;
     onUrlFilterChange?: (urlFilter: string | undefined) => void;
     hideDisabled?: boolean;
@@ -69,7 +34,6 @@ export const PermissionsList = ({
     selectedForComparison = [],
     onComparisonToggle,
     onComparisonModeToggle,
-    onClearComparison,
     urlFilter,
     onUrlFilterChange,
     hideDisabled = true
@@ -211,82 +175,18 @@ export const PermissionsList = ({
         return levels.length > 0 ? Math.min(...levels) : 0;
     };
 
-    const getPrivilegeLevelColor = (level: number) => {
-        if (level <= 1) return '#1890ff';
-        if (level <= 2) return '#faad14';
-        if (level <= 3) return '#fa8c16';
-        return '#f5222d';
-    };
-
-    // Component to render privilege level as colored rectangles (smaller for list)
-    const PrivilegeLevelIndicator = ({ level }: { level: number }) => {
-        const rectangles = [];
-        for (let i = 1; i <= 5; i++) {
-            const isActive = i <= level;
-            rectangles.push(
-                <div
-                    key={i}
-                    style={{
-                        width: '6px',
-                        height: '8px',
-                        backgroundColor: isActive ? getPrivilegeLevelColor(level) : '#333333',
-                        border: '1px solid #555555',
-                        display: 'inline-block',
-                        marginRight: i < 5 ? '1px' : '0'
-                    }}
-                />
-            );
-        }
-        return (
-            <div style={{ display: 'flex', alignItems: 'center' }} title={`Privilege Level ${level}/5`}>
-                {rectangles}
-            </div>
-        );
-    };
-
     return (
         <div style={{ height: '100%', display: 'flex', flexDirection: 'column', backgroundColor: '#252423FF' }}>
-            <div style={{ padding: '16px', borderBottom: '1px solid #303030', flexShrink: 0 }}>
-                <Search
-                    placeholder='Search permissions & URLs...'
-                    allowClear
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    prefix={<SearchOutlined />}
-                    style={{ marginBottom: '8px' }}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                    <Text type='secondary'>
-                        {filteredPermissions.length} of {permissions.length} permissions
-                        {urlFilter && <Text type='warning'> (filtered by: /{urlFilter})</Text>}
-                    </Text>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                        <Button
-                            type={showRscOnly ? 'primary' : 'default'}
-                            size='small'
-                            icon={<TeamOutlined />}
-                            onClick={() => setShowRscOnly(!showRscOnly)}
-                            title='Show only Resource Specific Consent permissions'
-                        >
-                            RSC
-                        </Button>
-                        <Button type={comparisonMode ? 'primary' : 'default'} size='small' icon={<SwapOutlined />} onClick={onComparisonModeToggle}>
-                            Compare
-                            {selectedForComparison.length > 0 && <Badge count={selectedForComparison.length} style={{ marginLeft: '4px' }} />}
-                        </Button>
-                        {selectedForComparison.length > 0 && (
-                            <Button size='small' icon={<ClearOutlined />} onClick={onClearComparison}>
-                                Clear
-                            </Button>
-                        )}
-                        {urlFilter && (
-                            <Button size='small' icon={<ClearOutlined />} onClick={() => onUrlFilterChange?.(undefined)}>
-                                Clear Filter
-                            </Button>
-                        )}
-                    </div>
-                </div>
-            </div>
+            <PermissionsListHeader
+                searchTerm={searchTerm}
+                onSearchChange={setSearchTerm}
+                urlFilter={urlFilter}
+                showRscOnly={showRscOnly}
+                onShowRscOnlyChange={setShowRscOnly}
+                comparisonMode={comparisonMode}
+                onComparisonModeToggle={onComparisonModeToggle}
+                onUrlFilterChange={onUrlFilterChange}
+            />
 
             <div style={{ flex: 1, overflow: 'auto', minHeight: 0, maxHeight: '100%' }}>
                 {isLoading ? (
@@ -321,111 +221,18 @@ export const PermissionsList = ({
                                         size='small'
                                         pagination={false}
                                         renderItem={(permission) => (
-                                            <List.Item
-                                                style={{
-                                                    padding: '8px 12px',
-                                                    cursor: 'pointer',
-                                                    backgroundColor:
-                                                        selectedPermission === permission.name
-                                                            ? 'rgba(50, 108, 57, 0.2)'
-                                                            : selectedForComparison.includes(permission.name)
-                                                              ? 'rgba(24, 144, 255, 0.1)'
-                                                              : 'transparent',
-                                                    borderLeft:
-                                                        selectedPermission === permission.name
-                                                            ? '3px solid #326c39'
-                                                            : selectedForComparison.includes(permission.name)
-                                                              ? '3px solid #1890ff'
-                                                              : '3px solid transparent',
-                                                    borderBottom: '1px solid #333',
-                                                    marginLeft: '16px'
-                                                }}
-                                                onClick={(e) => {
-                                                    if (comparisonMode && e.target !== e.currentTarget) return;
-                                                    if (!comparisonMode) {
-                                                        onPermissionSelect(permission.name);
-                                                    }
-                                                }}
-                                            >
-                                                <List.Item.Meta
-                                                    title={
-                                                        <div
-                                                            style={{
-                                                                display: 'flex',
-                                                                alignItems: 'center',
-                                                                justifyContent: 'space-between',
-                                                                width: '100%'
-                                                            }}
-                                                        >
-                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
-                                                                {comparisonMode && (
-                                                                    <Checkbox
-                                                                        checked={selectedForComparison.includes(permission.name)}
-                                                                        onChange={(e) => {
-                                                                            e.stopPropagation();
-                                                                            onComparisonToggle?.(permission.name);
-                                                                        }}
-                                                                    />
-                                                                )}
-                                                                <Text strong style={{ color: '#50AF5BFF', fontSize: '13px' }}>
-                                                                    {permission.name}
-                                                                </Text>
-                                                                {permission.authorizationType === 'RSC' && (
-                                                                    <Tag
-                                                                        icon={<TeamOutlined />}
-                                                                        color='blue'
-                                                                        style={{ fontSize: '10px', lineHeight: 1.2, padding: '0 4px' }}
-                                                                    >
-                                                                        RSC
-                                                                    </Tag>
-                                                                )}
-                                                                {(() => {
-                                                                    const description = descriptions.find((desc) => desc.value === permission.name);
-                                                                    return description && description.isEnabled === false ? (
-                                                                        <Tag color='red' style={{ fontSize: '10px', lineHeight: 1.2, padding: '0 4px' }}>
-                                                                            DISABLED
-                                                                        </Tag>
-                                                                    ) : null;
-                                                                })()}
-                                                            </div>
-                                                            <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', alignItems: 'center' }}>
-                                                                <Button
-                                                                    type='text'
-                                                                    size='small'
-                                                                    icon={
-                                                                        favorites.has(permission.name) ? (
-                                                                            <StarFilled style={{ color: '#faad14' }} />
-                                                                        ) : (
-                                                                            <StarOutlined />
-                                                                        )
-                                                                    }
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        toggleFavorite(permission.name);
-                                                                    }}
-                                                                    style={{
-                                                                        border: 'none',
-                                                                        padding: '0',
-                                                                        minWidth: 'auto',
-                                                                        height: 'auto',
-                                                                        lineHeight: 1
-                                                                    }}
-                                                                />
-                                                                {getLowestPrivilegeLevel(permission) > 0 && (
-                                                                    <PrivilegeLevelIndicator level={getLowestPrivilegeLevel(permission)} />
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                    }
-                                                    description={
-                                                        <Text type='secondary' style={{ fontSize: '11px' }}>
-                                                            {permission.schemes.DelegatedWork?.adminDisplayName ||
-                                                                permission.schemes.Application?.adminDisplayName ||
-                                                                'No description available'}
-                                                        </Text>
-                                                    }
-                                                />
-                                            </List.Item>
+                                            <PermissionItem
+                                                permission={permission}
+                                                descriptions={descriptions}
+                                                selectedPermission={selectedPermission}
+                                                selectedForComparison={selectedForComparison}
+                                                comparisonMode={comparisonMode}
+                                                favorites={favorites}
+                                                onPermissionSelect={onPermissionSelect}
+                                                onComparisonToggle={onComparisonToggle}
+                                                onToggleFavorite={toggleFavorite}
+                                                getLowestPrivilegeLevel={getLowestPrivilegeLevel}
+                                            />
                                         )}
                                     />
                                 </Panel>

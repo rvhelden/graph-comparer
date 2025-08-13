@@ -1,100 +1,22 @@
-import { Card, Typography, Descriptions, Tag, Table, Collapse, Empty, Tabs, Select, Button, Alert } from 'antd';
-import {
-    ApiOutlined,
-    LockOutlined,
-    UserOutlined,
-    AppstoreOutlined,
-    LinkOutlined,
-    TeamOutlined,
-    MessageOutlined,
-    UsergroupAddOutlined
-} from '@ant-design/icons';
-import { useState } from 'react';
+import { Card, Typography, Descriptions, Tag, Collapse, Empty, Tabs, Button, Alert } from 'antd';
+import { ApiOutlined, LinkOutlined, TeamOutlined } from '@ant-design/icons';
 import type { Permission, PermissionDescription } from '../hooks/usePermissions';
+import { PrivilegeLevelIndicator } from './PrivilegeLevelIndicator';
+import { EndpointTable } from './EndpointTable';
+import { getRscScopeInfo } from '../utils/rscUtils';
+import { getSchemeIcon, getSchemeColor } from '../utils/schemeUtils';
+import type { ApiEndpoint } from '../types/api';
 
 const { Title, Text, Paragraph } = Typography;
 const { Panel } = Collapse;
 
-// Function to get RSC scope information
-const getRscScopeInfo = (permissionName: string) => {
-    if (permissionName.endsWith('.Chat')) {
-        return {
-            scope: 'Chat',
-            icon: <MessageOutlined />,
-            description: 'Resource-specific consent for individual chats and meetings',
-            color: '#1890ff'
-        };
-    } else if (permissionName.endsWith('.Group')) {
-        return {
-            scope: 'Team/Group',
-            icon: <UsergroupAddOutlined />,
-            description: 'Resource-specific consent for individual teams and groups',
-            color: '#285f0d'
-        };
-    } else if (permissionName.endsWith('.User')) {
-        return {
-            scope: 'User',
-            icon: <UserOutlined />,
-            description: 'Resource-specific consent for individual users',
-            color: '#fa8c16'
-        };
-    }
-    return null;
-};
-
-interface ApiEndpoint {
-    key: string;
-    method: string;
-    path: string;
-    config: string;
-    schemes: string[];
-}
 
 interface PermissionDetailsProps {
     permission: Permission | null;
     descriptions: PermissionDescription[];
-    onUrlFilter?: (urlPrefix: string) => void;
+    onUrlFilter: (url: string) => void;
     apiVersion?: 'v1.0' | 'beta';
 }
-
-// Component for individual endpoint tab with method filtering
-const EndpointTable = ({
-    endpoints,
-    apiColumns
-}: {
-    endpoints: ApiEndpoint[];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    apiColumns: any[];
-}) => {
-    const [methodFilter, setMethodFilter] = useState<string | undefined>(undefined);
-
-    // Get unique methods for this tab
-    const availableMethods = [...new Set(endpoints.map((e) => e.method))].sort();
-
-    // Filter endpoints by selected method
-    const filteredEndpoints = methodFilter ? endpoints.filter((e) => e.method === methodFilter) : endpoints;
-
-    return (
-        <div>
-            <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Text>Filter by method:</Text>
-                <Select placeholder='All methods' value={methodFilter} onChange={setMethodFilter} allowClear style={{ minWidth: 120 }}>
-                    {availableMethods.map((method) => (
-                        <Select.Option key={method} value={method}>
-                            <Tag color={method === 'GET' ? 'blue' : method === 'POST' ? 'green' : 'orange'} style={{ margin: 0 }}>
-                                {method}
-                            </Tag>
-                        </Select.Option>
-                    ))}
-                </Select>
-                <Text type='secondary'>
-                    {filteredEndpoints.length} of {endpoints.length} endpoints
-                </Text>
-            </div>
-            <Table columns={apiColumns} dataSource={filteredEndpoints} pagination={false} scroll={{ x: true }} size='small' />
-        </div>
-    );
-};
 
 export const PermissionDetails = ({ permission, descriptions, onUrlFilter, apiVersion = 'v1.0' }: PermissionDetailsProps) => {
     if (!permission) {
@@ -113,64 +35,6 @@ export const PermissionDetails = ({ permission, descriptions, onUrlFilter, apiVe
         );
     }
 
-    const getSchemeIcon = (schemeType: string) => {
-        switch (schemeType) {
-            case 'Application':
-                return <AppstoreOutlined />;
-            case 'DelegatedWork':
-                return <UserOutlined />;
-            case 'DelegatedPersonal':
-                return <UserOutlined />;
-            default:
-                return <LockOutlined />;
-        }
-    };
-
-    const getSchemeColor = (schemeType: string) => {
-        switch (schemeType) {
-            case 'Application':
-                return '#722ed1';
-            case 'DelegatedWork':
-                return '#1890ff';
-            case 'DelegatedPersonal':
-                return '#fa8c16';
-            default:
-                return '#1890ff';
-        }
-    };
-
-    const getPrivilegeLevelColor = (level: number) => {
-        if (level <= 1) return '#1890ff';
-        if (level <= 2) return '#faad14';
-        if (level <= 3) return '#fa8c16';
-        return '#f5222d';
-    };
-
-    // Component to render privilege level as colored rectangles
-    const PrivilegeLevelIndicator = ({ level }: { level: number }) => {
-        const rectangles = [];
-        for (let i = 1; i <= 5; i++) {
-            const isActive = i <= level;
-            rectangles.push(
-                <div
-                    key={i}
-                    style={{
-                        width: '8px',
-                        height: '12px',
-                        backgroundColor: isActive ? getPrivilegeLevelColor(level) : '#333333',
-                        border: '1px solid #555555',
-                        display: 'inline-block',
-                        marginRight: i < 5 ? '1px' : '0'
-                    }}
-                />
-            );
-        }
-        return (
-            <div style={{ display: 'flex', alignItems: 'center' }} title={`Privilege Level ${level}/5`}>
-                {rectangles}
-            </div>
-        );
-    };
 
     // Find matching description from the descriptions array
     const matchingDescription = descriptions.find((desc) => desc.value === permission.name);
@@ -220,25 +84,11 @@ export const PermissionDetails = ({ permission, descriptions, onUrlFilter, apiVe
             dataIndex: 'path',
             key: 'path',
             render: (path: string) => {
-                const handleUrlClick = () => {
-                    const segments = path.split('/').filter((segment) => segment);
-                    if (segments.length > 0 && onUrlFilter) {
-                        onUrlFilter(segments[0]);
-                    }
-                };
-
                 const fullPath = `/${apiVersion}${path}`;
 
                 return (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <Text
-                            code
-                            style={{
-                                cursor: onUrlFilter ? 'pointer' : 'default'
-                            }}
-                            onClick={onUrlFilter ? handleUrlClick : undefined}
-                            title={onUrlFilter ? 'Click to filter permissions by this URL prefix' : undefined}
-                        >
+                        <Text style={{ cursor: 'pointer' }} onClick={() => onUrlFilter(path)} title='Click to filter permissions by this URL prefix'>
                             {fullPath}
                         </Text>
                     </div>
@@ -289,7 +139,7 @@ export const PermissionDetails = ({ permission, descriptions, onUrlFilter, apiVe
                         type='primary'
                         icon={<LinkOutlined />}
                         onClick={() => {
-                            let docUrl = `https://learn.microsoft.com/en-us/graph/permissions-reference#${permission.name.toLowerCase().replace(/\./g, '')}`;
+                            const docUrl = `https://learn.microsoft.com/en-us/graph/permissions-reference#${permission.name.toLowerCase().replace(/\./g, '')}`;
                             window.open(docUrl, '_blank');
                         }}
                         style={{ backgroundColor: '#326c39', borderColor: '#326c39' }}
