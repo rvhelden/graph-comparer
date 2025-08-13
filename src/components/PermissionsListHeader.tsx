@@ -1,4 +1,4 @@
-import { Input, Typography, Button, Tag } from 'antd';
+import { Input, Typography, Button } from 'antd';
 import { SearchOutlined, SwapOutlined, ClearOutlined, TeamOutlined } from '@ant-design/icons';
 import type { EndpointFilter } from '../types/filter';
 
