@@ -1,5 +1,6 @@
-import { Input, Typography, Button, Badge } from 'antd';
+import { Input, Typography, Button, Tag } from 'antd';
 import { SearchOutlined, SwapOutlined, ClearOutlined, TeamOutlined } from '@ant-design/icons';
+import type { EndpointFilter } from '../types/filter';
 
 const { Search } = Input;
 const { Text } = Typography;
@@ -7,23 +8,23 @@ const { Text } = Typography;
 interface PermissionsListHeaderProps {
     searchTerm: string;
     onSearchChange: (value: string) => void;
-    urlFilter?: string;
+    endpointFilter?: EndpointFilter;
     showRscOnly: boolean;
     onShowRscOnlyChange: (show: boolean) => void;
     comparisonMode: boolean;
     onComparisonModeToggle?: () => void;
-    onUrlFilterChange?: (urlFilter: string | undefined) => void;
+    onEndpointFilterChange?: (filter: EndpointFilter | undefined) => void;
 }
 
 export const PermissionsListHeader = ({
     searchTerm,
     onSearchChange,
-    urlFilter,
+    endpointFilter,
     showRscOnly,
     onShowRscOnlyChange,
     comparisonMode,
     onComparisonModeToggle,
-    onUrlFilterChange
+    onEndpointFilterChange
 }: PermissionsListHeaderProps) => {
     return (
         <div style={{ padding: '16px', borderBottom: '1px solid #303030', flexShrink: 0 }}>
@@ -36,7 +37,7 @@ export const PermissionsListHeader = ({
                 style={{ marginBottom: '8px' }}
             />
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <Text type='secondary'>{urlFilter && <Text type='warning'> (filtered)</Text>}</Text>
+                <Text type='secondary'>{endpointFilter && <Text type='warning'>(filtered)</Text>}</Text>
                 <div style={{ display: 'flex', gap: '8px' }}>
                     <Button
                         type={showRscOnly ? 'primary' : 'default'}
@@ -50,8 +51,8 @@ export const PermissionsListHeader = ({
                     <Button type={comparisonMode ? 'primary' : 'default'} size='small' icon={<SwapOutlined />} onClick={onComparisonModeToggle}>
                         Compare
                     </Button>
-                    {urlFilter && (
-                        <Button size='small' icon={<ClearOutlined />} onClick={() => onUrlFilterChange?.(undefined)}>
+                    {endpointFilter && (
+                        <Button size='small' icon={<ClearOutlined />} onClick={() => onEndpointFilterChange?.(undefined)}>
                             Clear Filter
                         </Button>
                     )}

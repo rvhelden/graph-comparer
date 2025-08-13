@@ -5,6 +5,7 @@ import type { Permission } from '../hooks/usePermissions';
 import { COMMON_PERMISSIONS } from '../constants/permissions';
 import { PermissionItem } from './PermissionItem';
 import { PermissionsListHeader } from './PermissionsListHeader';
+import type { EndpointFilter } from '../types/filter';
 
 const { Text } = Typography;
 const { Panel } = Collapse;
@@ -19,8 +20,8 @@ interface PermissionsListProps {
     selectedForComparison?: string[];
     onComparisonToggle?: (permissionName: string) => void;
     onComparisonModeToggle?: () => void;
-    urlFilter?: string;
-    onUrlFilterChange?: (urlFilter: string | undefined) => void;
+    endpointFilter?: EndpointFilter;
+    onEndpointFilterChange?: (filter: EndpointFilter | undefined) => void;
     hideDisabled?: boolean;
 }
 
@@ -34,8 +35,8 @@ export const PermissionsList = ({
     selectedForComparison = [],
     onComparisonToggle,
     onComparisonModeToggle,
-    urlFilter,
-    onUrlFilterChange,
+    endpointFilter,
+    onEndpointFilterChange,
     hideDisabled = true
 }: PermissionsListProps) => {
     const [searchTerm, setSearchTerm] = useState('');
@@ -112,12 +113,16 @@ export const PermissionsList = ({
             });
         }
 
-        // Apply URL filter
-        if (urlFilter) {
+        // Apply endpoint filter (method + path)
+        if (endpointFilter) {
             filtered = filtered.filter((permission) => {
-                return permission.pathSets.some((pathSet) =>
-                    Object.keys(pathSet.paths).some((path) => path.toLowerCase().includes(urlFilter.toLowerCase()))
-                );
+                return permission.pathSets.some((pathSet) => {
+                    const pathMatches =
+                        !endpointFilter.path || Object.keys(pathSet.paths).some((path) => path.toLowerCase() === endpointFilter.path!.toLowerCase());
+                    const methodMatches =
+                        !endpointFilter.method || pathSet.methods.some((method) => method.toLowerCase() === endpointFilter.method!.toLowerCase());
+                    return pathMatches && methodMatches;
+                });
             });
         }
 
@@ -135,7 +140,7 @@ export const PermissionsList = ({
         }
 
         return filtered;
-    }, [permissions, searchTerm, searchIndex, urlFilter, showRscOnly, hideDisabled, descriptions]);
+    }, [permissions, searchTerm, searchIndex, endpointFilter, showRscOnly, hideDisabled, descriptions]);
 
     // Group permissions by first part of permission name
     const groupedPermissions = useMemo(() => {
@@ -180,12 +185,12 @@ export const PermissionsList = ({
             <PermissionsListHeader
                 searchTerm={searchTerm}
                 onSearchChange={setSearchTerm}
-                urlFilter={urlFilter}
+                endpointFilter={endpointFilter}
                 showRscOnly={showRscOnly}
                 onShowRscOnlyChange={setShowRscOnly}
                 comparisonMode={comparisonMode}
                 onComparisonModeToggle={onComparisonModeToggle}
-                onUrlFilterChange={onUrlFilterChange}
+                onEndpointFilterChange={onEndpointFilterChange}
             />
 
             <div style={{ flex: 1, overflow: 'auto', minHeight: 0, maxHeight: '100%' }}>

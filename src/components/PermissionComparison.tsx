@@ -2,6 +2,7 @@ import { Card, Typography, Table, Tag, Alert, Button, Switch } from 'antd';
 import { ApiOutlined, LockOutlined, UserOutlined, AppstoreOutlined, CloseOutlined, FilterOutlined } from '@ant-design/icons';
 import { useState } from 'react';
 import type { Permission, PermissionDescription } from '../hooks/usePermissions';
+import type { EndpointFilter } from '../types/filter';
 
 const { Title, Text } = Typography;
 
@@ -20,10 +21,10 @@ interface PermissionComparisonProps {
     selectedPermissions: Permission[];
     descriptions: PermissionDescription[];
     onRemovePermission: (permissionName: string) => void;
-    onUrlFilter: (url: string) => void;
+    onEndpointFilter: (filter: EndpointFilter) => void;
 }
 
-export const PermissionComparison = ({ selectedPermissions, descriptions, onRemovePermission, onUrlFilter }: PermissionComparisonProps) => {
+export const PermissionComparison = ({ selectedPermissions, descriptions, onRemovePermission, onEndpointFilter }: PermissionComparisonProps) => {
     const [showDifferencesOnly, setShowDifferencesOnly] = useState(false);
     const getSchemeIcon = (schemeType: string) => {
         switch (schemeType) {
@@ -147,8 +148,12 @@ export const PermissionComparison = ({ selectedPermissions, descriptions, onRemo
             title: 'Endpoint',
             dataIndex: 'path',
             key: 'path',
-            render: (path: string) => (
-                <Text style={{ cursor: 'pointer' }} onClick={() => onUrlFilter(path)} title='Click to filter permissions by this URL prefix'>
+            render: (path: string, record: EndpointData) => (
+                <Text 
+                    style={{ cursor: 'pointer', color: '#50AF5BFF' }} 
+                    onClick={() => onEndpointFilter({ method: record.method, path: path })} 
+                    title={`Click to filter permissions by ${record.method} ${path}`}
+                >
                     {path}
                 </Text>
             )

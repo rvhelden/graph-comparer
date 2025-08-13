@@ -6,6 +6,7 @@ import { EndpointTable } from './EndpointTable';
 import { getRscScopeInfo } from '../utils/rscUtils';
 import { getSchemeIcon, getSchemeColor } from '../utils/schemeUtils';
 import type { ApiEndpoint } from '../types/api';
+import type { EndpointFilter } from '../types/filter';
 
 const { Title, Text, Paragraph } = Typography;
 const { Panel } = Collapse;
@@ -14,11 +15,11 @@ const { Panel } = Collapse;
 interface PermissionDetailsProps {
     permission: Permission | null;
     descriptions: PermissionDescription[];
-    onUrlFilter: (url: string) => void;
+    onEndpointFilter: (filter: EndpointFilter) => void;
     apiVersion?: 'v1.0' | 'beta';
 }
 
-export const PermissionDetails = ({ permission, descriptions, onUrlFilter, apiVersion = 'v1.0' }: PermissionDetailsProps) => {
+export const PermissionDetails = ({ permission, descriptions, onEndpointFilter, apiVersion = 'v1.0' }: PermissionDetailsProps) => {
     if (!permission) {
         return (
             <div
@@ -83,12 +84,16 @@ export const PermissionDetails = ({ permission, descriptions, onUrlFilter, apiVe
             title: 'Endpoint',
             dataIndex: 'path',
             key: 'path',
-            render: (path: string) => {
+            render: (path: string, record: ApiEndpoint) => {
                 const fullPath = `/${apiVersion}${path}`;
 
                 return (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <Text style={{ cursor: 'pointer' }} onClick={() => onUrlFilter(path)} title='Click to filter permissions by this URL prefix'>
+                        <Text 
+                            style={{ cursor: 'pointer', color: '#50AF5BFF' }} 
+                            onClick={() => onEndpointFilter({ method: record.method, path: path })} 
+                            title={`Click to filter permissions by ${record.method} ${path}`}
+                        >
                             {fullPath}
                         </Text>
                     </div>

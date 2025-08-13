@@ -5,6 +5,7 @@ import { PermissionsList } from './PermissionsList';
 import { PermissionDetails } from './PermissionDetails';
 import { PermissionComparison } from './PermissionComparison';
 import { usePermissions } from '../hooks/usePermissions';
+import type { EndpointFilter } from '../types/filter';
 
 const { Header, Sider, Content } = Layout;
 
@@ -13,7 +14,7 @@ export const AppLayout = () => {
     const [selectedPermission, setSelectedPermission] = useState<string | null>(null);
     const [comparisonMode, setComparisonMode] = useState(false);
     const [selectedForComparison, setSelectedForComparison] = useState<string[]>([]);
-    const [urlFilter, setUrlFilter] = useState<string | undefined>(undefined);
+    const [endpointFilter, setEndpointFilter] = useState<EndpointFilter | undefined>(undefined);
     const [apiVersion, setApiVersion] = useState<'v1.0' | 'beta'>('v1.0');
     const [hideDisabled, setHideDisabled] = useState(true);
 
@@ -32,10 +33,6 @@ export const AppLayout = () => {
         } else {
             setSelectedForComparison([]); // Clear comparison selection when leaving comparison mode
         }
-    };
-
-    const handleClearComparison = () => {
-        setSelectedForComparison([]);
     };
 
     const handleRemoveFromComparison = (permissionName: string) => {
@@ -80,8 +77,8 @@ export const AppLayout = () => {
                         selectedForComparison={selectedForComparison}
                         onComparisonToggle={handleComparisonToggle}
                         onComparisonModeToggle={handleComparisonModeToggle}
-                        urlFilter={urlFilter}
-                        onUrlFilterChange={setUrlFilter}
+                        endpointFilter={endpointFilter}
+                        onEndpointFilterChange={setEndpointFilter}
                         hideDisabled={hideDisabled}
                     />
                 </Sider>
@@ -103,13 +100,13 @@ export const AppLayout = () => {
                             selectedPermissions={selectedPermissionsData}
                             descriptions={descriptions}
                             onRemovePermission={handleRemoveFromComparison}
-                            onUrlFilter={setUrlFilter}
+                            onEndpointFilter={setEndpointFilter}
                         />
                     ) : (
                         <PermissionDetails
                             permission={selectedPermissionData}
                             descriptions={descriptions}
-                            onUrlFilter={setUrlFilter}
+                            onEndpointFilter={setEndpointFilter}
                             apiVersion={apiVersion}
                         />
                     )}
